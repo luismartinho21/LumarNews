@@ -1,9 +1,9 @@
-function NewsList({ news, onDeleteNews }) {
+function NewsList({ news }) {
   if (!news || news.length === 0) {
     return (
       <div className="empty-state">
-        <h3>Ainda não há notícias</h3>
-        <p>Preencha o formulário para criar a sua primeira notícia do LumarSports.</p>
+        <h3>A carregar notícias...</h3>
+        <p>A aguardar as últimas novidades do mundo do desporto.</p>
       </div>
     );
   }
@@ -11,22 +11,19 @@ function NewsList({ news, onDeleteNews }) {
   return (
     <div className="news-feed">
       {news.map((article) => (
-        <article key={article.id} className="news-card">
-          <button 
-            className="news-card-delete" 
-            onClick={() => onDeleteNews(article.id)}
-            title="Apagar Notícia"
-          >
-            ×
-          </button>
-          <img src={article.imageUrl} alt={article.title} className="news-card-img" />
+        <a href={article.link} target="_blank" rel="noopener noreferrer" key={article.id} className="news-card">
+          {article.imageUrl && (
+            <img src={article.imageUrl} alt={article.title} className="news-card-img" />
+          )}
           <div className="news-card-content">
-            <div className="news-card-date">{article.date}</div>
+            <div className="news-card-header">
+              <span className="news-card-date">{article.date}</span>
+              {article.category && <span className="news-card-category">{article.category}</span>}
+            </div>
             <h3 className="news-card-title">{article.title}</h3>
-            {article.subtitle && <p className="news-card-subtitle">{article.subtitle}</p>}
             <p className="news-card-body">{article.content}</p>
           </div>
-        </article>
+        </a>
       ))}
     </div>
   );
