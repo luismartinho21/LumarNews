@@ -9,8 +9,15 @@ import './index.css';
 
 const SOURCES = [
   { name: 'Record', url: 'https://www.record.pt/rss' },
+  { name: 'A Bola', url: 'https://www.abola.pt/rss' },
+  { name: 'O Jogo', url: 'https://www.ojogo.pt/rss' },
+  { name: 'SAPO', url: 'https://desporto.sapo.pt/rss' },
   { name: 'RTP', url: 'https://www.rtp.pt/noticias/rss' },
-  { name: 'CNN Portugal', url: 'https://cnnportugal.iol.pt/rss' }
+  { name: 'SIC', url: 'https://sicnoticias.pt/rss' },
+  { name: 'CNN Portugal', url: 'https://cnnportugal.iol.pt/rss' },
+  { name: 'Notícias ao Minuto', url: 'https://www.noticiasaominuto.com/rss/ultima-hora' },
+  { name: 'Observador', url: 'https://observador.pt/feed/' },
+  { name: 'Público', url: 'https://feeds.feedburner.com/PublicoRSS' }
 ];
 
 // Função para limpar CDATA e tags indesejadas (incluindo entidades HTML)
@@ -59,7 +66,7 @@ function App() {
   });
   
   const [categories, setCategories] = useState([]);
-  const [sources, setSources] = useState(['Record', 'RTP', 'CNN Portugal']);
+  const [sources, setSources] = useState(['Todas']);
   const [selectedCategory, setSelectedCategory] = useState('Todas');
   const [selectedSource, setSelectedSource] = useState('Todas');
   const [searchQuery, setSearchQuery] = useState('');
@@ -69,10 +76,22 @@ function App() {
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [legalPage, setLegalPage] = useState(null); // 'privacy' ou 'terms'
 
-  const fetchNews = async () => {
+  // Refresh state
+  const [pendingNews, setPendingNews] = useState([]);
+
+  const fetchNews = async (isBackground = false) => {
     try {
+      const lastFetch = localStorage.getItem('lumar_last_fetch');
+      const now = Date.now();
+      
+      // Se não for background (ou seja, montagem inicial) e tivermos feito fetch há menos de 5 mins, saltar
+      if (!isBackground && lastFetch && (now - parseInt(lastFetch) < 5 * 60 * 1000) && news.length > 0) {
+        setIsLoading(false);
+        return;
+      }
+
       let fetchedNews = [];
-      const timestamp = Date.now();
+      const timestamp = now;
 
       for (const source of SOURCES) {
         const noCacheRssUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(source.url + '?t=' + timestamp)}`;
@@ -85,8 +104,9 @@ function App() {
               ? item.categories[0] 
               : 'Geral';
             
-            // Forçar categoria Desporto para o Record ou temas de desporto
-            if (source.name === 'Record' || 
+            // Forçar categoria Desporto para o fontes desportivas ou temas de desporto
+            const sportSources = ['Record', 'A Bola', 'O Jogo', 'SAPO'];
+            if (sportSources.includes(source.name) || 
                 category.toLowerCase() === 'desporto' || 
                 category.toLowerCase() === 'futebol' ||
                 category.toLowerCase() === 'modalidades') {
@@ -113,12 +133,28 @@ function App() {
         }
       }
 
-      setNews(prevNews => {
-        const newItems = fetchedNews.filter(n => !prevNews.some(p => p.id === n.id));
-        let combined = [...newItems, ...prevNews];
-        combined.sort((a, b) => b.dateObj - a.dateObj);
-        return combined.slice(0, 100);
-      });
+      const newItems = fetchedNews.filter(n => !news.some(p => p.id === n.id));
+      
+      if (newItems.length > 0) {
+        if (news.length === 0 || !isBackground) {
+          // Primeira vez ou carregamento inicial forçado
+          setNews(prevNews => {
+            let combined = [...newItems, ...prevNews];
+            combined.sort((a, b) => b.dateObj - a.dateObj);
+            return combined.slice(0, 150);
+          });
+        } else {
+          // Atualização silenciosa
+          setPendingNews(prev => {
+            const reallyNew = newItems.filter(n => !prev.some(p => p.id === n.id));
+            let combined = [...reallyNew, ...prev];
+            combined.sort((a, b) => b.dateObj - a.dateObj);
+            return combined;
+          });
+        }
+      }
+      
+      localStorage.setItem('lumar_last_fetch', now.toString());
     } catch (error) {
       console.error("Erro ao carregar notícias:", error);
     } finally {
@@ -128,15 +164,20 @@ function App() {
 
   useEffect(() => {
     localStorage.setItem('lumar_news_history', JSON.stringify(news));
+    
+    // Extrair fontes e categorias únicas
     const uniqueCategories = [...new Set(news.map(n => n.category))];
-    setCategories(uniqueCategories.filter(c => c && c !== 'Geral').slice(0, 12));
+    setCategories(uniqueCategories.filter(c => c && c !== 'Geral').slice(0, 15));
+    
+    const uniqueSources = [...new Set(news.map(n => n.source))];
+    setSources(uniqueSources.sort());
   }, [news]);
 
   useEffect(() => {
-    fetchNews();
+    fetchNews(false);
     const interval = setInterval(() => {
-      fetchNews();
-    }, 10 * 60 * 1000);
+      fetchNews(true);
+    }, 10 * 60 * 1000); // 10 minutes
     return () => clearInterval(interval);
   }, []);
 
@@ -159,6 +200,16 @@ function App() {
     setLegalPage(null);
     setSelectedArticle(null);
     window.scrollTo(0, 0);
+  };
+
+  const applyPendingNews = () => {
+    setNews(prevNews => {
+      let combined = [...pendingNews, ...prevNews];
+      combined.sort((a, b) => b.dateObj - a.dateObj);
+      return combined.slice(0, 150);
+    });
+    setPendingNews([]);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -199,6 +250,12 @@ function App() {
 
       <Footer onNavigate={handleNavigate} />
       <CookieBanner onReadMore={() => handleNavigate('privacy')} />
+      
+      {pendingNews.length > 0 && !selectedArticle && !legalPage && (
+        <button className="refresh-fab" onClick={applyPendingNews}>
+          Nova bomba 💣! ({pendingNews.length}) Atualizar
+        </button>
+      )}
     </div>
   );
 }

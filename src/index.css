@@ -642,6 +642,34 @@ h1, h2, h3 {
   box-shadow: none;
 }
 
+/* Floating Action Button for Refresh */
+.refresh-fab {
+  position: fixed;
+  top: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  padding: 0.8rem 1.5rem;
+  border-radius: 2rem;
+  border: none;
+  box-shadow: 0 10px 25px rgba(6, 182, 212, 0.4);
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  cursor: pointer;
+  z-index: 1000;
+  animation: slideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.refresh-fab:hover {
+  transform: translateX(-50%) scale(1.05);
+}
+
+@keyframes slideDown {
+  from { top: -50px; opacity: 0; }
+  to { top: 1.5rem; opacity: 1; }
+}
+
 /* Legal Pages */
 .legal-page {
   animation: fadeIn 0.3s ease;
