@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import NewsFilter from './components/NewsFilter';
 import NewsList from './components/NewsList';
 import NewsDetail from './components/NewsDetail';
@@ -52,7 +52,12 @@ function App() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        return parsed.map(item => ({
+        // Deduplicate saved history just in case it got corrupted
+        const unique = [];
+        parsed.forEach(item => {
+          if (!unique.some(p => p.id === item.id)) unique.push(item);
+        });
+        return unique.map(item => ({
           ...item,
           title: cleanText(item.title),
           content: cleanText(item.content),
@@ -78,6 +83,12 @@ function App() {
 
   // Refresh state
   const [pendingNews, setPendingNews] = useState([]);
+  
+  // Ref para aceder ao news mais recente no setPendingNews
+  const newsRef = useRef(news);
+  useEffect(() => {
+    newsRef.current = news;
+  }, [news]);
 
   const fetchNews = async (isBackground = false) => {
     try {
@@ -133,21 +144,26 @@ function App() {
         }
       }
 
-      const newItems = fetchedNews.filter(n => !news.some(p => p.id === n.id));
-      
-      if (newItems.length > 0) {
-        if (news.length === 0 || !isBackground) {
+      if (fetchedNews.length > 0) {
+        if (!isBackground) {
           // Primeira vez ou carregamento inicial forçado
           setNews(prevNews => {
-            let combined = [...newItems, ...prevNews];
+            const reallyNew = fetchedNews.filter(n => !prevNews.some(p => p.id === n.id));
+            if (reallyNew.length === 0) return prevNews;
+            let combined = [...reallyNew, ...prevNews];
             combined.sort((a, b) => b.dateObj - a.dateObj);
             return combined.slice(0, 150);
           });
         } else {
-          // Atualização silenciosa
-          setPendingNews(prev => {
-            const reallyNew = newItems.filter(n => !prev.some(p => p.id === n.id));
-            let combined = [...reallyNew, ...prev];
+          // Atualização silenciosa em background
+          setPendingNews(prevPending => {
+            const currentNews = newsRef.current;
+            const reallyNew = fetchedNews.filter(n => 
+              !currentNews.some(p => p.id === n.id) && 
+              !prevPending.some(p => p.id === n.id)
+            );
+            if (reallyNew.length === 0) return prevPending;
+            let combined = [...reallyNew, ...prevPending];
             combined.sort((a, b) => b.dateObj - a.dateObj);
             return combined;
           });
