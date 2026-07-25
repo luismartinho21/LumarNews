@@ -1,7 +1,38 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { getFallbackImage } from '../utils';
 
 function NewsList({ news, onArticleClick, isLoading }) {
+  const [speakingId, setSpeakingId] = useState(null);
+
+  useEffect(() => {
+    return () => window.speechSynthesis.cancel();
+  }, []);
+
+  const toggleSpeech = (e, article) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (speakingId === article.id) {
+      window.speechSynthesis.cancel();
+      setSpeakingId(null);
+    } else {
+      window.speechSynthesis.cancel(); // Para o que estiver a tocar antes
+
+      const textToSpeak = `${article.title}. ${article.content}`;
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.lang = 'pt-PT';
+      
+      const voices = window.speechSynthesis.getVoices();
+      const ptVoice = voices.find(v => v.lang === 'pt-PT') || voices.find(v => v.lang.startsWith('pt'));
+      if (ptVoice) utterance.voice = ptVoice;
+      
+      utterance.onend = () => setSpeakingId(null);
+      utterance.onerror = () => setSpeakingId(null);
+      
+      window.speechSynthesis.speak(utterance);
+      setSpeakingId(article.id);
+    }
+  };
   if (isLoading && (!news || news.length === 0)) {
     return (
       <div className="news-feed">
@@ -54,6 +85,22 @@ function NewsList({ news, onArticleClick, isLoading }) {
             </div>
             <h3 className="news-card-title">{article.title}</h3>
             <p className="news-card-body">{article.content}</p>
+            <div style={{ marginTop: '0.8rem' }}>
+              <button 
+                onClick={(e) => toggleSpeech(e, article)}
+                className="btn btn-outline"
+                style={{ 
+                  width: 'auto', 
+                  padding: '0.4rem 0.8rem', 
+                  fontSize: '0.85rem',
+                  background: speakingId === article.id ? 'rgba(6, 182, 212, 0.2)' : 'transparent',
+                  color: speakingId === article.id ? 'var(--primary)' : 'inherit',
+                  borderColor: speakingId === article.id ? 'var(--primary)' : 'var(--border-color)'
+                }}
+              >
+                {speakingId === article.id ? '🛑 Parar Leitura' : '🎤 Ouvir Resumo'}
+              </button>
+            </div>
           </div>
         </a>
       ))}
