@@ -21,9 +21,23 @@ function NewsDetail({ article, onBack }) {
       utterance.lang = 'pt-PT';
       
       const voices = window.speechSynthesis.getVoices();
-      const ptVoice = voices.find(v => v.lang === 'pt-PT') || voices.find(v => v.lang.startsWith('pt'));
-      if (ptVoice) utterance.voice = ptVoice;
       
+      const maleVoiceNames = ['cristiano', 'tiago', 'helder', 'daniel', 'antonio', 'antónio', 'ricardo', 'male'];
+      const ptVoices = voices.filter(v => v.lang.startsWith('pt'));
+      
+      let selectedVoice = ptVoices.find(v => {
+        const nameLower = v.name.toLowerCase();
+        return maleVoiceNames.some(maleName => nameLower.includes(maleName));
+      });
+      
+      if (!selectedVoice) {
+        selectedVoice = ptVoices.find(v => v.lang === 'pt-PT') || ptVoices[0];
+      }
+      
+      if (selectedVoice) utterance.voice = selectedVoice;
+      
+      utterance.pitch = 0.9; // Baixar o pitch
+
       utterance.onend = () => setIsSpeaking(false);
       utterance.onerror = () => setIsSpeaking(false);
       
