@@ -15,8 +15,8 @@ function Footer({ onNavigate }) {
         </a>
       </div>
       <div className="footer-copyright">
-        &copy; {new Date().getFullYear()} LumarNews. Todos os direitos reservados.<br/>
-        Agregador de conteúdos gerado com fontes públicas RSS.
+        &copy; {new Date().getFullYear()} LumarNews.<br/>
+        Agregador de conteúdos via RSS. Todas as marcas e notícias são propriedade das respetivas entidades emissoras.
       </div>
     </footer>
   );

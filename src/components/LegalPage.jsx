@@ -28,7 +28,7 @@ function LegalPage({ pageType, onBack }) {
           <p>Não utilizamos cookies de rastreamento (tracking) para fins de publicidade direcionada.</p>
 
           <h3>4. Ligações a Terceiros</h3>
-          <p>O nosso serviço agrega conteúdos de sites de terceiros (ex: RTP, CNN, Record). Ao clicar para ler a notícia original, será reencaminhado para esses sites, que possuem as suas próprias Políticas de Privacidade, pelas quais não somos responsáveis.</p>
+          <p>O nosso serviço agrega conteúdos de sites de terceiros (incluindo RTP, SIC, CNN Portugal, Record, A Bola, O Jogo, SAPO, Notícias ao Minuto, Observador, Público, entre outros). Ao clicar para ler a notícia original, será reencaminhado para esses sites, que possuem as suas próprias Políticas de Privacidade, pelas quais não somos responsáveis.</p>
 
           <h3>5. Contactos</h3>
           <p>Se tiver alguma questão sobre esta Política de Privacidade, por favor contacte-nos através do e-mail: <strong>lutinhopes@gmail.com</strong>.</p>
@@ -44,8 +44,8 @@ function LegalPage({ pageType, onBack }) {
           <h3>2. Natureza do Serviço</h3>
           <p>O LumarNews atua exclusivamente como um agregador de conteúdos jornalísticos, recolhendo informações públicas disponibilizadas via RSS pelos vários órgãos de comunicação social (jornais, televisões e portais web).</p>
 
-          <h3>3. Propriedade Intelectual</h3>
-          <p>Todos os textos, imagens e conteúdos noticiosos apresentados são propriedade exclusiva dos seus respetivos autores e órgãos de comunicação social. O LumarNews não detém quaisquer direitos de autor sobre as notícias agregadas.</p>
+          <h3>3. Propriedade Intelectual e Direitos Reservados</h3>
+          <p>Todos os textos, imagens, logótipos e conteúdos noticiosos apresentados são propriedade exclusiva dos seus respetivos autores e órgãos de comunicação social (incluindo, mas não limitando a: Cofina Media, Global Media Group, Impresa, RTP, Media Capital, SAPO, Observador, Público, etc.). O LumarNews não detém quaisquer direitos de autor sobre as notícias agregadas, servindo apenas como um diretório que redireciona o tráfego para os sites originais.</p>
 
           <h3>4. Exoneração de Responsabilidade</h3>
           <p>Não nos responsabilizamos pela veracidade, exatidão ou conteúdo das notícias apresentadas, uma vez que estas são geradas por terceiros. A leitura completa e interpretação dos factos deve ser sempre validada junto da fonte original.</p>
