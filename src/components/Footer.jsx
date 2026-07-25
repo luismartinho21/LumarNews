@@ -15,7 +15,7 @@ function Footer({ onNavigate }) {
         </a>
       </div>
       <div className="footer-copyright">
-        &copy; {new Date().getFullYear()} LumarNews.<br/>
+        &copy; {new Date().getFullYear()} <a href="https://lumar.email/" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>Lumar</a>.<br/>
         Agregador de conteúdos via RSS. Todas as marcas e notícias são propriedade das respetivas entidades emissoras.
       </div>
     </footer>
