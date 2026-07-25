@@ -1,12 +1,45 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { getFallbackImage } from '../utils';
 
 function NewsDetail({ article, onBack }) {
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  useEffect(() => {
+    // Para a voz se o utilizador fechar a notícia
+    return () => {
+      window.speechSynthesis.cancel();
+    };
+  }, []);
+
+  const toggleSpeech = () => {
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    } else {
+      const textToSpeak = `${article.title}. ${article.content}`;
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.lang = 'pt-PT';
+      
+      const voices = window.speechSynthesis.getVoices();
+      const ptVoice = voices.find(v => v.lang === 'pt-PT') || voices.find(v => v.lang.startsWith('pt'));
+      if (ptVoice) utterance.voice = ptVoice;
+      
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
+      
+      window.speechSynthesis.speak(utterance);
+      setIsSpeaking(true);
+    }
+  };
+
   if (!article) return null;
 
   return (
     <div className="news-detail-container">
-      <button className="back-btn" onClick={onBack}>
+      <button className="back-btn" onClick={() => {
+        window.speechSynthesis.cancel();
+        onBack();
+      }}>
         &larr; Voltar às notícias
       </button>
 
@@ -52,6 +85,13 @@ function NewsDetail({ article, onBack }) {
                 style={{ width: 'auto' }}
               >
                 Partilhar
+              </button>
+              <button 
+                onClick={toggleSpeech}
+                className="btn btn-outline"
+                style={{ width: 'auto', background: isSpeaking ? 'rgba(6, 182, 212, 0.2)' : 'transparent', color: isSpeaking ? 'var(--primary)' : 'inherit' }}
+              >
+                {isSpeaking ? '🛑 Parar Leitura' : '🎤 Ouvir Notícia'}
               </button>
               <a 
                 href={article.link} 
