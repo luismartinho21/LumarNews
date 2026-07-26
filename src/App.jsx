@@ -233,7 +233,7 @@ function App() {
   return (
     <div className="app-container">
       <header className="header" onClick={handleBackToHome} style={{cursor: 'pointer'}}>
-        <img src="/logo.png" alt="LumarNews Logo" className="app-logo" />
+        <img src="/News_logo.png" alt="LumarNews Logo" className="app-logo" />
         <h1 className="visually-hidden">LumarNews</h1>
         <p>O seu portal agregador de notícias gerais e desporto</p>
       </header>

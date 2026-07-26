@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.png', 'logo.png'],
+      includeAssets: ['favicon.png', 'News_logo.png'],
       manifest: {
         name: 'LumarSports',
         short_name: 'LumarSports',
@@ -23,7 +23,7 @@ export default defineConfig({
             type: 'image/png'
           },
           {
-            src: 'logo.png',
+            src: 'News_logo.png',
             sizes: '512x512',
             type: 'image/png'
           }
