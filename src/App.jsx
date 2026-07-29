@@ -1,75 +1,78 @@
-import { useState, useEffect, useRef } from 'react';
-import NewsFilter from './components/NewsFilter';
-import NewsList from './components/NewsList';
-import NewsDetail from './components/NewsDetail';
-import CookieBanner from './components/CookieBanner';
-import Footer from './components/Footer';
-import LegalPage from './components/LegalPage';
-import DailyDigest from './components/DailyDigest';
-import './index.css';
+import { useState, useEffect, useRef } from "react";
+import NewsFilter from "./components/NewsFilter";
+import NewsList from "./components/NewsList";
+import NewsDetail from "./components/NewsDetail";
+import CookieBanner from "./components/CookieBanner";
+import Footer from "./components/Footer";
+import LegalPage from "./components/LegalPage";
+import DailyDigest from "./components/DailyDigest";
+import "./index.css";
 
 const SOURCES = [
-  { name: 'Record', url: 'https://www.record.pt/rss' },
-  { name: 'A Bola', url: 'https://www.abola.pt/rss' },
-  { name: 'O Jogo', url: 'https://www.ojogo.pt/rss' },
-  { name: 'SAPO', url: 'https://desporto.sapo.pt/rss' },
-  { name: 'RTP', url: 'https://www.rtp.pt/noticias/rss' },
-  { name: 'SIC', url: 'https://sicnoticias.pt/rss' },
-  { name: 'CNN Portugal', url: 'https://cnnportugal.iol.pt/rss' },
-  { name: 'Notícias ao Minuto', url: 'https://www.noticiasaominuto.com/rss/ultima-hora' },
-  { name: 'Observador', url: 'https://observador.pt/feed/' },
-  { name: 'Público', url: 'https://feeds.feedburner.com/PublicoRSS' }
+  { name: "Record", url: "https://www.record.pt/rss" },
+  { name: "A Bola", url: "https://www.abola.pt/rss" },
+  { name: "O Jogo", url: "https://www.ojogo.pt/rss" },
+  { name: "SAPO", url: "https://desporto.sapo.pt/rss" },
+  { name: "RTP", url: "https://www.rtp.pt/noticias/rss" },
+  { name: "SIC", url: "https://sicnoticias.pt/rss" },
+  { name: "CNN Portugal", url: "https://cnnportugal.iol.pt/rss" },
+  {
+    name: "Notícias ao Minuto",
+    url: "https://www.noticiasaominuto.com/rss/ultima-hora",
+  },
+  { name: "Observador", url: "https://observador.pt/feed/" },
+  { name: "Público", url: "https://feeds.feedburner.com/PublicoRSS" },
 ];
 
 // Função para limpar CDATA e tags indesejadas (incluindo entidades HTML)
 const cleanText = (text, isTitle = false) => {
-  if (!text) return '';
+  if (!text) return "";
   let cleaned = text
-    .replace(/&lt;!\[CDATA\[/gi, '')
-    .replace(/\]\]&gt;/gi, '')
-    .replace(/<!\[CDATA\[/gi, '')
-    .replace(/\]\]>/gi, '');
-    
+    .replace(/&lt;!\[CDATA\[/gi, "")
+    .replace(/\]\]&gt;/gi, "")
+    .replace(/<!\[CDATA\[/gi, "")
+    .replace(/\]\]>/gi, "");
+
   // Descodificar entidades HTML duplamente (ex: &amp;quot;)
   for (let i = 0; i < 2; i++) {
     cleaned = cleaned
-      .replace(/&amp;/g, '&')
+      .replace(/&amp;/g, "&")
       .replace(/&quot;/g, '"')
       .replace(/&#39;/g, "'")
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
       .replace(/&#8216;/g, "'")
       .replace(/&#8217;/g, "'")
       .replace(/&#8220;/g, '"')
       .replace(/&#8221;/g, '"');
   }
-  
+
   cleaned = cleaned.trim();
-  
+
   // Remover lixo dos títulos estilo "2h. ", "10h ", "1h." que os jornais colocam (RTP, Observador)
   if (isTitle) {
-    cleaned = cleaned.replace(/^\d+h\.?\s*/i, '');
+    cleaned = cleaned.replace(/^\d+h\.?\s*/i, "");
   }
-  
+
   return cleaned;
 };
 
 function App() {
   const [news, setNews] = useState(() => {
-    const saved = localStorage.getItem('lumar_news_history');
+    const saved = localStorage.getItem("lumar_news_history");
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         // Deduplicate saved history just in case it got corrupted
         const unique = [];
-        parsed.forEach(item => {
-          if (!unique.some(p => p.id === item.id)) unique.push(item);
+        parsed.forEach((item) => {
+          if (!unique.some((p) => p.id === item.id)) unique.push(item);
         });
-        return unique.map(item => ({
+        return unique.map((item) => ({
           ...item,
           title: cleanText(item.title, true),
           content: cleanText(item.content),
-          category: cleanText(item.category)
+          category: cleanText(item.category),
         }));
       } catch (e) {
         return [];
@@ -77,21 +80,21 @@ function App() {
     }
     return [];
   });
-  
+
   const [categories, setCategories] = useState([]);
-  const [sources, setSources] = useState(['Todas']);
-  const [selectedCategory, setSelectedCategory] = useState('Todas');
-  const [selectedSource, setSelectedSource] = useState('Todas');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [sources, setSources] = useState(["Todas"]);
+  const [selectedCategory, setSelectedCategory] = useState("Todas");
+  const [selectedSource, setSelectedSource] = useState("Todas");
+  const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // Navigation State
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [legalPage, setLegalPage] = useState(null); // 'privacy' ou 'terms'
 
   // Refresh state
   const [pendingNews, setPendingNews] = useState([]);
-  
+
   // Ref para aceder ao news mais recente no setPendingNews
   const newsRef = useRef(news);
   useEffect(() => {
@@ -100,11 +103,16 @@ function App() {
 
   const fetchNews = async (isBackground = false) => {
     try {
-      const lastFetch = localStorage.getItem('lumar_last_fetch');
+      const lastFetch = localStorage.getItem("lumar_last_fetch");
       const now = Date.now();
-      
+
       // Se não for background (ou seja, montagem inicial) e tivermos feito fetch há menos de 5 mins, saltar
-      if (!isBackground && lastFetch && (now - parseInt(lastFetch) < 5 * 60 * 1000) && news.length > 0) {
+      if (
+        !isBackground &&
+        lastFetch &&
+        now - parseInt(lastFetch) < 5 * 60 * 1000 &&
+        news.length > 0
+      ) {
         setIsLoading(false);
         return;
       }
@@ -113,26 +121,31 @@ function App() {
       const timestamp = now;
 
       for (const source of SOURCES) {
-        const noCacheRssUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(source.url + '?t=' + timestamp)}`;
+        const noCacheRssUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(source.url + "?t=" + timestamp)}`;
         const response = await fetch(noCacheRssUrl);
         const data = await response.json();
-        
-        if (data.status === 'ok') {
-          const items = data.items.map(item => {
-            let category = item.categories && item.categories.length > 0 
-              ? item.categories[0] 
-              : 'Geral';
-            
+
+        if (data.status === "ok") {
+          const items = data.items.map((item) => {
+            let category =
+              item.categories && item.categories.length > 0
+                ? item.categories[0]
+                : "Geral";
+
             // Forçar categoria Desporto para o fontes desportivas ou temas de desporto
-            const sportSources = ['Record', 'A Bola', 'O Jogo', 'SAPO'];
-            if (sportSources.includes(source.name) || 
-                category.toLowerCase() === 'desporto' || 
-                category.toLowerCase() === 'futebol' ||
-                category.toLowerCase() === 'modalidades') {
-              category = 'Desporto';
+            const sportSources = ["Record", "A Bola", "O Jogo", "SAPO"];
+            if (
+              sportSources.includes(source.name) ||
+              category.toLowerCase() === "desporto" ||
+              category.toLowerCase() === "futebol" ||
+              category.toLowerCase() === "modalidades"
+            ) {
+              category = "Desporto";
             }
 
-            const cleanDescription = item.description.replace(/<[^>]+>/g, '').trim();
+            const cleanDescription = item.description
+              .replace(/<[^>]+>/g, "")
+              .trim();
 
             return {
               id: item.guid || item.link,
@@ -141,11 +154,14 @@ function App() {
               link: item.link,
               imageUrl: item.thumbnail || item.enclosure?.link,
               dateObj: new Date(item.pubDate), // Guardar para ordenação
-              date: new Date(item.pubDate).toLocaleString('pt-PT', {
-                day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+              date: new Date(item.pubDate).toLocaleString("pt-PT", {
+                day: "2-digit",
+                month: "short",
+                hour: "2-digit",
+                minute: "2-digit",
               }),
               category: cleanText(category),
-              source: source.name
+              source: source.name,
             };
           });
           fetchedNews = [...fetchedNews, ...items];
@@ -155,8 +171,10 @@ function App() {
       if (fetchedNews.length > 0) {
         if (!isBackground) {
           // Primeira vez ou carregamento inicial forçado
-          setNews(prevNews => {
-            const reallyNew = fetchedNews.filter(n => !prevNews.some(p => p.id === n.id));
+          setNews((prevNews) => {
+            const reallyNew = fetchedNews.filter(
+              (n) => !prevNews.some((p) => p.id === n.id),
+            );
             if (reallyNew.length === 0) return prevNews;
             let combined = [...reallyNew, ...prevNews];
             combined.sort((a, b) => b.dateObj - a.dateObj);
@@ -164,11 +182,12 @@ function App() {
           });
         } else {
           // Atualização silenciosa em background
-          setPendingNews(prevPending => {
+          setPendingNews((prevPending) => {
             const currentNews = newsRef.current;
-            const reallyNew = fetchedNews.filter(n => 
-              !currentNews.some(p => p.id === n.id) && 
-              !prevPending.some(p => p.id === n.id)
+            const reallyNew = fetchedNews.filter(
+              (n) =>
+                !currentNews.some((p) => p.id === n.id) &&
+                !prevPending.some((p) => p.id === n.id),
             );
             if (reallyNew.length === 0) return prevPending;
             let combined = [...reallyNew, ...prevPending];
@@ -177,8 +196,8 @@ function App() {
           });
         }
       }
-      
-      localStorage.setItem('lumar_last_fetch', now.toString());
+
+      localStorage.setItem("lumar_last_fetch", now.toString());
     } catch (error) {
       console.error("Erro ao carregar notícias:", error);
     } finally {
@@ -187,35 +206,48 @@ function App() {
   };
 
   useEffect(() => {
-    localStorage.setItem('lumar_news_history', JSON.stringify(news));
-    
+    localStorage.setItem("lumar_news_history", JSON.stringify(news));
+
     // Extrair fontes e categorias únicas
-    const uniqueCategories = [...new Set(news.map(n => n.category))];
-    setCategories(uniqueCategories.filter(c => c && c !== 'Geral').slice(0, 15));
-    
-    const uniqueSources = [...new Set(news.map(n => n.source))];
+    const uniqueCategories = [...new Set(news.map((n) => n.category))];
+    setCategories(
+      uniqueCategories.filter((c) => c && c !== "Geral").slice(0, 15),
+    );
+
+    const uniqueSources = [...new Set(news.map((n) => n.source))];
     setSources(uniqueSources.sort());
   }, [news]);
 
   useEffect(() => {
     fetchNews(false);
-    const interval = setInterval(() => {
-      fetchNews(true);
-    }, 10 * 60 * 1000); // 10 minutes
+    const interval = setInterval(
+      () => {
+        fetchNews(true);
+      },
+      10 * 60 * 1000,
+    ); // 10 minutes
     return () => clearInterval(interval);
   }, []);
 
-  const filteredNews = news.filter(article => {
+  const filteredNews = news.filter((article) => {
     // Esconder lixo genérico de rádio
-    const text = (article.title + ' ' + article.content).toLowerCase();
-    if (text.includes('rádio observador') || text.includes('noticiário antena') || text.includes('aconteça o que acontecer') || text.includes('podcast')) {
+    const text = (article.title + " " + article.content).toLowerCase();
+    if (
+      text.includes("rádio observador") ||
+      text.includes("noticiário antena") ||
+      text.includes("aconteça o que acontecer") ||
+      text.includes("podcast")
+    ) {
       return false;
     }
 
-    const matchCategory = selectedCategory === 'Todas' || article.category === selectedCategory;
-    const matchSource = selectedSource === 'Todas' || article.source === selectedSource;
-    const matchSearch = searchQuery.trim() === '' || 
-      article.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    const matchCategory =
+      selectedCategory === "Todas" || article.category === selectedCategory;
+    const matchSource =
+      selectedSource === "Todas" || article.source === selectedSource;
+    const matchSearch =
+      searchQuery.trim() === "" ||
+      article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       article.content.toLowerCase().includes(searchQuery.toLowerCase());
     return matchCategory && matchSource && matchSearch;
   });
@@ -233,18 +265,22 @@ function App() {
   };
 
   const applyPendingNews = () => {
-    setNews(prevNews => {
+    setNews((prevNews) => {
       let combined = [...pendingNews, ...prevNews];
       combined.sort((a, b) => b.dateObj - a.dateObj);
       return combined.slice(0, 150);
     });
     setPendingNews([]);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
     <div className="app-container">
-      <header className="header" onClick={handleBackToHome} style={{cursor: 'pointer'}}>
+      <header
+        className="header"
+        onClick={handleBackToHome}
+        style={{ cursor: "pointer" }}
+      >
         <img src="/News_logo.png" alt="LumarNews Logo" className="app-logo" />
         <h1 className="visually-hidden">LumarNews</h1>
         <p>O seu portal agregador de notícias gerais e desporto</p>
@@ -254,25 +290,26 @@ function App() {
         {legalPage ? (
           <LegalPage pageType={legalPage} onBack={handleBackToHome} />
         ) : selectedArticle ? (
-          <NewsDetail 
-            article={selectedArticle} 
-            onBack={handleBackToHome} 
-          />
+          <NewsDetail article={selectedArticle} onBack={handleBackToHome} />
         ) : (
           <>
-            <NewsFilter 
+            <NewsFilter
               sources={sources}
               selectedSource={selectedSource}
               onSelectSource={setSelectedSource}
-              categories={categories} 
-              selectedCategory={selectedCategory} 
+              categories={categories}
+              selectedCategory={selectedCategory}
               onSelectCategory={setSelectedCategory}
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
             />
-            
+
             <section className="feed-section">
-              <NewsList news={filteredNews} onArticleClick={setSelectedArticle} isLoading={isLoading} />
+              <NewsList
+                news={filteredNews}
+                onArticleClick={setSelectedArticle}
+                isLoading={isLoading}
+              />
             </section>
 
             <DailyDigest news={news} />
@@ -281,8 +318,8 @@ function App() {
       </main>
 
       <Footer onNavigate={handleNavigate} />
-      <CookieBanner onReadMore={() => handleNavigate('privacy')} />
-      
+      <CookieBanner onReadMore={() => handleNavigate("privacy")} />
+
       {pendingNews.length > 0 && !selectedArticle && !legalPage && (
         <button className="refresh-fab" onClick={applyPendingNews}>
           Nova bomba 💣! ({pendingNews.length}) Atualizar

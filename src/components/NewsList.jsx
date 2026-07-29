@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { getFallbackImage } from '../utils';
+import React, { useState, useEffect } from "react";
+import { getFallbackImage } from "../utils";
 
 function NewsList({ news, onArticleClick, isLoading }) {
   const [speakingId, setSpeakingId] = useState(null);
@@ -20,29 +20,38 @@ function NewsList({ news, onArticleClick, isLoading }) {
 
       const textToSpeak = `${article.title}. ${article.content}`;
       const utterance = new SpeechSynthesisUtterance(textToSpeak);
-      utterance.lang = 'pt-PT';
-      
+      utterance.lang = "pt-PT";
+
       const voices = window.speechSynthesis.getVoices();
-      
-      const maleVoiceNames = ['cristiano', 'tiago', 'helder', 'daniel', 'antonio', 'antónio', 'ricardo', 'male'];
-      const ptVoices = voices.filter(v => v.lang.startsWith('pt'));
-      
-      let selectedVoice = ptVoices.find(v => {
+
+      const maleVoiceNames = [
+        "cristiano",
+        "tiago",
+        "helder",
+        "daniel",
+        "antonio",
+        "antónio",
+        "ricardo",
+        "male",
+      ];
+      const ptVoices = voices.filter((v) => v.lang.startsWith("pt"));
+
+      let selectedVoice = ptVoices.find((v) => {
         const nameLower = v.name.toLowerCase();
-        return maleVoiceNames.some(maleName => nameLower.includes(maleName));
+        return maleVoiceNames.some((maleName) => nameLower.includes(maleName));
       });
-      
+
       if (!selectedVoice) {
-        selectedVoice = ptVoices.find(v => v.lang === 'pt-PT') || ptVoices[0];
+        selectedVoice = ptVoices.find((v) => v.lang === "pt-PT") || ptVoices[0];
       }
-      
+
       if (selectedVoice) utterance.voice = selectedVoice;
-      
+
       utterance.pitch = 0.9; // Baixar um pouco o tom (pitch) ajuda a parecer mais grave caso o sistema só tenha vozes femininas
 
       utterance.onend = () => setSpeakingId(null);
       utterance.onerror = () => setSpeakingId(null);
-      
+
       window.speechSynthesis.speak(utterance);
       setSpeakingId(article.id);
     }
@@ -76,7 +85,7 @@ function NewsList({ news, onArticleClick, isLoading }) {
   return (
     <div className="news-feed">
       {news.map((article) => (
-        <a 
+        <a
           key={article.id}
           href="#"
           className="news-card"
@@ -87,32 +96,45 @@ function NewsList({ news, onArticleClick, isLoading }) {
           role="button"
           tabIndex={0}
         >
-          <img 
-            src={article.imageUrl || getFallbackImage(article.category)} 
-            alt={article.title} 
-            className="news-card-img" 
+          <img
+            src={article.imageUrl || getFallbackImage(article.category)}
+            alt={article.title}
+            className="news-card-img"
           />
           <div className="news-card-content">
             <div className="news-card-header">
-              <span className="news-card-date">{article.date} &bull; {article.source}</span>
-              {article.category && <span className="news-card-category">{article.category}</span>}
+              <span className="news-card-date">
+                {article.date} &bull; {article.source}
+              </span>
+              {article.category && (
+                <span className="news-card-category">{article.category}</span>
+              )}
             </div>
             <h3 className="news-card-title">{article.title}</h3>
             <p className="news-card-body">{article.content}</p>
-            <div style={{ marginTop: '0.8rem' }}>
-              <button 
+            <div style={{ marginTop: "0.8rem" }}>
+              <button
                 onClick={(e) => toggleSpeech(e, article)}
                 className="btn btn-outline"
-                style={{ 
-                  width: 'auto', 
-                  padding: '0.4rem 0.8rem', 
-                  fontSize: '0.85rem',
-                  background: speakingId === article.id ? 'rgba(6, 182, 212, 0.2)' : 'transparent',
-                  color: speakingId === article.id ? 'var(--primary)' : 'inherit',
-                  borderColor: speakingId === article.id ? 'var(--primary)' : 'var(--border-color)'
+                style={{
+                  width: "auto",
+                  padding: "0.4rem 0.8rem",
+                  fontSize: "0.85rem",
+                  background:
+                    speakingId === article.id
+                      ? "rgba(6, 182, 212, 0.2)"
+                      : "transparent",
+                  color:
+                    speakingId === article.id ? "var(--primary)" : "inherit",
+                  borderColor:
+                    speakingId === article.id
+                      ? "var(--primary)"
+                      : "var(--border-color)",
                 }}
               >
-                {speakingId === article.id ? '🛑 Parar Leitura' : '🎤 Ouvir Resumo'}
+                {speakingId === article.id
+                  ? "🛑 Parar Leitura"
+                  : "🎤 Ouvir Resumo"}
               </button>
             </div>
           </div>
