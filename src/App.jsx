@@ -22,7 +22,7 @@ const SOURCES = [
 ];
 
 // Função para limpar CDATA e tags indesejadas (incluindo entidades HTML)
-const cleanText = (text) => {
+const cleanText = (text, isTitle = false) => {
   if (!text) return '';
   let cleaned = text
     .replace(/&lt;!\[CDATA\[/gi, '')
@@ -44,7 +44,14 @@ const cleanText = (text) => {
       .replace(/&#8221;/g, '"');
   }
   
-  return cleaned.trim();
+  cleaned = cleaned.trim();
+  
+  // Remover lixo dos títulos estilo "2h. ", "10h ", "1h." que os jornais colocam (RTP, Observador)
+  if (isTitle) {
+    cleaned = cleaned.replace(/^\d+h\.?\s*/i, '');
+  }
+  
+  return cleaned;
 };
 
 function App() {
@@ -60,7 +67,7 @@ function App() {
         });
         return unique.map(item => ({
           ...item,
-          title: cleanText(item.title),
+          title: cleanText(item.title, true),
           content: cleanText(item.content),
           category: cleanText(item.category)
         }));
@@ -129,7 +136,7 @@ function App() {
 
             return {
               id: item.guid || item.link,
-              title: cleanText(item.title),
+              title: cleanText(item.title, true),
               content: cleanText(cleanDescription),
               link: item.link,
               imageUrl: item.thumbnail || item.enclosure?.link,
