@@ -4,6 +4,7 @@ function DailyDigest({ news }) {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [digestText, setDigestText] = useState('');
   const [sentences, setSentences] = useState([]);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -18,14 +19,28 @@ function DailyDigest({ news }) {
       return;
     }
 
-    // Gerar um texto amigável (pegar nas 10 mais recentes para não ficar gigante)
-    const topNews = news.slice(0, 10);
+    // Algoritmo: Falar de tudo um pouco
+    // Escolhemos até 3 notícias Gerais (Mundo, Política, etc) e até 2 de Desporto.
+    const sportsNews = news.filter(n => n.category === 'Desporto');
+    const generalNews = news.filter(n => n.category !== 'Desporto');
+    
+    const selectedNews = [
+      ...generalNews.slice(0, 3),
+      ...sportsNews.slice(0, 2)
+    ].sort((a, b) => b.dateObj - a.dateObj); // Misturar ordenando por data recente
+
     const textArray = [];
+    let fullText = "Bem-vindo à LumarNews. Aqui tens o resumo das principais notícias. ";
     
-    let fullText = "Bem-vindo à LumarNews. Aqui tens o resumo das principais notícias do momento. ";
-    
-    topNews.forEach((article, index) => {
-      const intro = index === 0 ? "A começar, " : (index % 2 === 0 ? "Além disso, " : "Entretanto, ");
+    selectedNews.forEach((article, index) => {
+      let intro = "";
+      if (index === 0) intro = "A começar, ";
+      else if (article.category === 'Desporto' && index > 0 && selectedNews[index-1].category !== 'Desporto') {
+        intro = "No mundo do desporto, ";
+      } else {
+        intro = index % 2 === 0 ? "Além disso, " : "Entretanto, ";
+      }
+
       const sourceTxt = article.source ? `segundo o ${article.source}, ` : "";
       const text = `${intro}${sourceTxt}${article.title}. ${article.content}`;
       
@@ -65,7 +80,7 @@ function DailyDigest({ news }) {
       if (selectedVoice) utterance.voice = selectedVoice;
       
       utterance.pitch = 0.9; 
-      utterance.rate = 1.0; 
+      utterance.rate = 1.1; 
 
       utterance.onend = () => setIsSpeaking(false);
       utterance.onerror = () => setIsSpeaking(false);
@@ -76,47 +91,79 @@ function DailyDigest({ news }) {
   };
 
   return (
-    <div className="daily-digest-container glass-panel" style={{ padding: '2rem', marginTop: '1rem', borderRadius: '12px' }}>
-      <h2 style={{ textAlign: 'center', marginBottom: '1rem' }}>Resumo Rápido 📻</h2>
-      
-      <p style={{ textAlign: 'center', color: 'var(--text-color)', opacity: 0.8, marginBottom: '2rem' }}>
-        Estás com pressa? Ouve as principais notícias do momento enquanto fazes outras coisas.
-      </p>
-
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
+    <div className="glass-panel" style={{ 
+      position: 'fixed',
+      bottom: '20px',
+      right: '20px',
+      width: '340px',
+      padding: '1rem',
+      borderRadius: '16px',
+      boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+      zIndex: 1000,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '10px',
+      border: '1px solid rgba(255,255,255,0.1)'
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h4 style={{ margin: 0, fontSize: '1.1rem' }}>📻 Rádio Resumo</h4>
         <button 
-          className="btn" 
-          onClick={toggleSpeech}
-          style={{ 
-            fontSize: '1.2rem', 
-            padding: '1rem 2rem',
-            background: isSpeaking ? 'transparent' : 'var(--primary)',
-            color: isSpeaking ? 'var(--primary)' : '#fff',
-            border: isSpeaking ? '2px solid var(--primary)' : 'none',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}
-          disabled={!news || news.length === 0}
+          onClick={() => setIsExpanded(!isExpanded)} 
+          style={{ background: 'transparent', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontSize: '0.9rem' }}
         >
-          {isSpeaking ? (
-             <><span style={{ fontSize: '1.5rem' }}>🛑</span> Parar Emissão</>
-          ) : (
-             <><span style={{ fontSize: '1.5rem' }}>🎧</span> Iniciar Rádio LumarNews</>
-          )}
+          {isExpanded ? 'Esconder guião' : 'Ver guião'}
         </button>
       </div>
+      
+      <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-color)', opacity: 0.8 }}>
+        Ouve um mix das melhores notícias de desporto e atualidade.
+      </p>
 
-      <div className="digest-text" style={{ background: 'var(--bg-color)', padding: '1.5rem', borderRadius: '8px', lineHeight: '1.8' }}>
-        <h4 style={{ marginBottom: '1rem' }}>O que vais ouvir:</h4>
-        {sentences.length > 0 ? (
-          sentences.map((sent, i) => (
-            <p key={i} style={{ marginBottom: '0.8rem' }}>{sent}</p>
-          ))
+      <button 
+        className="btn" 
+        onClick={toggleSpeech}
+        style={{ 
+          fontSize: '1rem', 
+          padding: '0.8rem 1rem',
+          background: isSpeaking ? 'transparent' : 'var(--primary)',
+          color: isSpeaking ? 'var(--primary)' : '#fff',
+          border: isSpeaking ? '2px solid var(--primary)' : 'none',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '0.5rem',
+          width: '100%',
+          marginTop: '0.5rem'
+        }}
+        disabled={!news || news.length === 0}
+      >
+        {isSpeaking ? (
+           <><span style={{ fontSize: '1.2rem' }}>🛑</span> Parar Emissão</>
         ) : (
-          <p>{digestText}</p>
+           <><span style={{ fontSize: '1.2rem' }}>🎧</span> Iniciar Rádio</>
         )}
-      </div>
+      </button>
+
+      {isExpanded && (
+        <div style={{ 
+          background: 'var(--bg-color)', 
+          padding: '1rem', 
+          borderRadius: '8px', 
+          maxHeight: '200px', 
+          overflowY: 'auto',
+          fontSize: '0.85rem',
+          lineHeight: '1.5',
+          marginTop: '0.5rem'
+        }}>
+          {sentences.length > 0 ? (
+            sentences.map((sent, i) => (
+              <p key={i} style={{ marginBottom: '0.5rem' }}>{sent}</p>
+            ))
+          ) : (
+            <p>{digestText}</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

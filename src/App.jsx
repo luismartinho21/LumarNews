@@ -81,7 +81,6 @@ function App() {
   // Navigation State
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [legalPage, setLegalPage] = useState(null); // 'privacy' ou 'terms'
-  const [activeTab, setActiveTab] = useState('feed'); // 'feed' ou 'digest'
 
   // Refresh state
   const [pendingNews, setPendingNews] = useState([]);
@@ -248,53 +247,22 @@ function App() {
           />
         ) : (
           <>
-            <div className="tabs" style={{ display: 'flex', justifyContent: 'center', gap: '1rem', margin: '1rem 0' }}>
-              <button 
-                className="btn"
-                style={{ 
-                  background: activeTab === 'feed' ? 'var(--primary)' : 'transparent',
-                  color: activeTab === 'feed' ? '#fff' : 'var(--text-color)',
-                  border: activeTab === 'feed' ? 'none' : '1px solid var(--border-color)',
-                  padding: '0.6rem 1.2rem'
-                }}
-                onClick={() => { window.speechSynthesis.cancel(); setActiveTab('feed'); }}
-              >
-                📰 Feed de Notícias
-              </button>
-              <button 
-                className="btn"
-                style={{ 
-                  background: activeTab === 'digest' ? 'var(--primary)' : 'transparent',
-                  color: activeTab === 'digest' ? '#fff' : 'var(--text-color)',
-                  border: activeTab === 'digest' ? 'none' : '1px solid var(--border-color)',
-                  padding: '0.6rem 1.2rem'
-                }}
-                onClick={() => { window.speechSynthesis.cancel(); setActiveTab('digest'); }}
-              >
-                📻 Rádio Resumo
-              </button>
-            </div>
+            <NewsFilter 
+              sources={sources}
+              selectedSource={selectedSource}
+              onSelectSource={setSelectedSource}
+              categories={categories} 
+              selectedCategory={selectedCategory} 
+              onSelectCategory={setSelectedCategory}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+            />
+            
+            <section className="feed-section">
+              <NewsList news={filteredNews} onArticleClick={setSelectedArticle} isLoading={isLoading} />
+            </section>
 
-            {activeTab === 'feed' ? (
-              <>
-                <NewsFilter 
-                  sources={sources}
-                  selectedSource={selectedSource}
-                  onSelectSource={setSelectedSource}
-                  categories={categories} 
-                  selectedCategory={selectedCategory} 
-                  onSelectCategory={setSelectedCategory}
-                  searchQuery={searchQuery}
-                  onSearchChange={setSearchQuery}
-                />
-                
-                <section className="feed-section">
-                  <NewsList news={filteredNews} onArticleClick={setSelectedArticle} isLoading={isLoading} />
-                </section>
-              </>
-            ) : (
-              <DailyDigest news={filteredNews} />
-            )}
+            <DailyDigest news={news} />
           </>
         )}
       </main>
