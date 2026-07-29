@@ -199,6 +199,12 @@ function App() {
   }, []);
 
   const filteredNews = news.filter(article => {
+    // Esconder lixo genérico de rádio
+    const text = (article.title + ' ' + article.content).toLowerCase();
+    if (text.includes('rádio observador') || text.includes('noticiário antena') || text.includes('aconteça o que acontecer') || text.includes('podcast')) {
+      return false;
+    }
+
     const matchCategory = selectedCategory === 'Todas' || article.category === selectedCategory;
     const matchSource = selectedSource === 'Todas' || article.source === selectedSource;
     const matchSearch = searchQuery.trim() === '' || 

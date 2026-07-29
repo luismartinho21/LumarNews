@@ -20,9 +20,18 @@ function DailyDigest({ news }) {
     }
 
     // Algoritmo: Falar de tudo um pouco
+    // Ignorar lixo (notícias de áudio genéricas da RTP/Observador que não têm texto real)
+    const validNews = news.filter(n => {
+      const text = (n.title + ' ' + n.content).toLowerCase();
+      return !text.includes('rádio observador') && 
+             !text.includes('noticiário antena') &&
+             !text.includes('aconteça o que acontecer') &&
+             !text.includes('podcast');
+    });
+
     // Escolhemos até 3 notícias Gerais (Mundo, Política, etc) e até 2 de Desporto.
-    const sportsNews = news.filter(n => n.category === 'Desporto');
-    const generalNews = news.filter(n => n.category !== 'Desporto');
+    const sportsNews = validNews.filter(n => n.category === 'Desporto');
+    const generalNews = validNews.filter(n => n.category !== 'Desporto');
     
     const selectedNews = [
       ...generalNews.slice(0, 3),
@@ -65,22 +74,34 @@ function DailyDigest({ news }) {
       utterance.lang = 'pt-PT';
       
       const voices = window.speechSynthesis.getVoices();
-      const maleVoiceNames = ['cristiano', 'tiago', 'helder', 'daniel', 'antonio', 'antónio', 'ricardo', 'male'];
       const ptVoices = voices.filter(v => v.lang.startsWith('pt'));
       
-      let selectedVoice = ptVoices.find(v => {
-        const nameLower = v.name.toLowerCase();
-        return maleVoiceNames.some(maleName => nameLower.includes(maleName));
-      });
+      // 1. Tentar encontrar vozes Online/Premium do Google (muito mais humanas e naturais)
+      let selectedVoice = ptVoices.find(v => 
+        v.name.toLowerCase().includes('google') || 
+        v.name.toLowerCase().includes('natural') || 
+        v.name.toLowerCase().includes('premium') ||
+        v.name.toLowerCase().includes('online')
+      );
       
+      // 2. Se não houver vozes premium, tentar voz masculina normal
+      if (!selectedVoice) {
+        const maleVoiceNames = ['cristiano', 'tiago', 'helder', 'daniel', 'antonio', 'antónio', 'ricardo', 'male'];
+        selectedVoice = ptVoices.find(v => {
+          const nameLower = v.name.toLowerCase();
+          return maleVoiceNames.some(maleName => nameLower.includes(maleName));
+        });
+      }
+      
+      // 3. Fallback absoluto
       if (!selectedVoice) {
         selectedVoice = ptVoices.find(v => v.lang === 'pt-PT') || ptVoices[0];
       }
       
       if (selectedVoice) utterance.voice = selectedVoice;
       
-      utterance.pitch = 0.9; 
-      utterance.rate = 1.1; 
+      utterance.pitch = 1.0; // Pitch neutro para soar menos robótico
+      utterance.rate = 1.05; // Velocidade ligeiramente acima do normal
 
       utterance.onend = () => setIsSpeaking(false);
       utterance.onerror = () => setIsSpeaking(false);
