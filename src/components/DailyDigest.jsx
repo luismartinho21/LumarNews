@@ -31,13 +31,14 @@ function DailyDigest({ news }) {
       );
     });
 
-    // Escolhemos até 3 notícias Gerais (Mundo, Política, etc) e até 2 de Desporto.
+    // Algoritmo: Falar de tudo um pouco (Versão Alargada)
+    // Escolhemos até 12 notícias Gerais (Mundo, Política, etc) e até 8 de Desporto. (Total: 20 notícias)
     const sportsNews = validNews.filter((n) => n.category === "Desporto");
     const generalNews = validNews.filter((n) => n.category !== "Desporto");
 
     const selectedNews = [
-      ...generalNews.slice(0, 3),
-      ...sportsNews.slice(0, 2),
+      ...generalNews.slice(0, 12),
+      ...sportsNews.slice(0, 8),
     ].sort((a, b) => b.dateObj - a.dateObj); // Misturar ordenando por data recente
 
     const textArray = [];
