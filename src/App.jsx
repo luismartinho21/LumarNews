@@ -49,10 +49,8 @@ const cleanText = (text, isTitle = false) => {
 
   cleaned = cleaned.trim();
 
-  // Remover lixo dos títulos estilo "2h. ", "10h ", "1h." que os jornais colocam (RTP, Observador)
-  if (isTitle) {
-    cleaned = cleaned.replace(/^\d+h\.?\s*/i, "");
-  }
+  // Remover lixo de tempo estilo "2h. ", "10h ", "1h." que fica no início
+  cleaned = cleaned.replace(/^[\s\W]*\d+\s*h\.?\s*/i, "");
 
   return cleaned;
 };
