@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.png', 'News_logo.png'],
       manifest: {
-        name: 'LumarSports',
-        short_name: 'LumarSports',
+        name: 'LumarNews',
+        short_name: 'LumarNews',
         description: 'O seu portal agregador de notícias gerais e desporto',
         theme_color: '#0f172a',
         background_color: '#0f172a',
