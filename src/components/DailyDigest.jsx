@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 function DailyDigest({ news }) {
   const [isSpeaking, setIsSpeaking] = useState(false);
