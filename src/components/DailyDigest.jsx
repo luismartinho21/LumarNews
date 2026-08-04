@@ -190,7 +190,6 @@ function DailyDigest({ news }) {
       <button
         className="btn"
         onClick={toggleSpeech}
-        disabled={isLoadingVoice}
         style={{
           fontSize: "1rem",
           padding: "0.8rem 1rem",
