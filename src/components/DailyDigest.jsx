@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 
 function DailyDigest({ news }) {
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [isLoadingVoice, setIsLoadingVoice] = useState(false);
   const [digestText, setDigestText] = useState("");
   const [sentences, setSentences] = useState([]);
 
@@ -77,71 +76,63 @@ function DailyDigest({ news }) {
     setSentences(textArray);
   }, [news]);
 
-  const toggleSpeech = async () => {
-    if (isSpeaking || isLoadingVoice) {
-      // Parar
-      isCancelled.current = true;
-      if (currentAudio.current) {
-        currentAudio.current.pause();
-        currentAudio.current = null;
-      }
+  const toggleSpeech = () => {
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
       setIsSpeaking(false);
-      setIsLoadingVoice(false);
     } else {
-      // Iniciar
-      isCancelled.current = false;
-      setIsSpeaking(true);
-      setIsLoadingVoice(true);
+      window.speechSynthesis.cancel();
 
-      try {
-        for (let i = 0; i < sentences.length; i++) {
-          if (isCancelled.current) break;
+      const utterance = new SpeechSynthesisUtterance(digestText);
+      utterance.lang = "pt-PT";
 
-          // Buscar o áudio para esta frase específica à Netlify Function (ElevenLabs)
-          const response = await fetch("/.netlify/functions/tts", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ text: sentences[i] }),
-          });
+      const voices = window.speechSynthesis.getVoices();
+      const ptVoices = voices.filter((v) => v.lang.startsWith("pt"));
 
-          if (!response.ok) {
-            console.error("Erro na API de voz:", await response.text());
-            throw new Error("Falha ao gerar voz");
-          }
+      // 1. Tentar encontrar vozes Online/Premium do Google (muito mais humanas e naturais)
+      let selectedVoice = ptVoices.find(
+        (v) =>
+          v.name.toLowerCase().includes("google") ||
+          v.name.toLowerCase().includes("natural") ||
+          v.name.toLowerCase().includes("premium") ||
+          v.name.toLowerCase().includes("online"),
+      );
 
-          const blob = await response.blob();
-          const url = URL.createObjectURL(blob);
-
-          if (isCancelled.current) {
-            URL.revokeObjectURL(url);
-            break;
-          }
-
-          // A primeira frase carregou, já podemos tirar o "Loading"
-          if (i === 0) setIsLoadingVoice(false);
-
-          const audio = new Audio(url);
-          currentAudio.current = audio;
-
-          // Esperar que o áudio termine antes de avançar para a próxima notícia
-          await new Promise((resolve) => {
-            audio.onended = resolve;
-            audio.onerror = resolve; // Em caso de erro, salta para a próxima
-            audio.play();
-          });
-
-          URL.revokeObjectURL(url);
-        }
-      } catch (error) {
-        console.error(error);
-        alert(
-          "Ocorreu um erro ao ligar ao servidor de voz. Verifica a tua ligação.",
-        );
-      } finally {
-        setIsSpeaking(false);
-        setIsLoadingVoice(false);
-        currentAudio.current = null;
+      // 2. Se não houver vozes premium, tentar voz masculina normal
+      if (!selectedVoice) {
+        const maleVoiceNames = [
+          "cristiano",
+          "tiago",
+          "helder",
+          "daniel",
+          "antonio",
+          "antónio",
+          "ricardo",
+          "male",
+        ];
+        selectedVoice = ptVoices.find((v) => {
+          const nameLower = v.name.toLowerCase();
+          return maleVoiceNames.some((maleName) =>
+            nameLower.includes(maleName),
+          );
+        });
       }
+
+      // 3. Fallback absoluto
+      if (!selectedVoice) {
+        selectedVoice = ptVoices.find((v) => v.lang === "pt-PT") || ptVoices[0];
+      }
+
+      if (selectedVoice) utterance.voice = selectedVoice;
+
+      utterance.pitch = 1.0; 
+      utterance.rate = 1.05; 
+
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
+
+      window.speechSynthesis.speak(utterance);
+      setIsSpeaking(true);
     }
   };
 
@@ -213,13 +204,9 @@ function DailyDigest({ news }) {
           width: "100%",
           marginTop: "0.5rem",
         }}
-        disabled={!news || news.length === 0 || isLoadingVoice}
+        disabled={!news || news.length === 0}
       >
-        {isLoadingVoice ? (
-          <>
-            <span style={{ fontSize: "1.2rem" }}>⏳</span> A afinar a voz...
-          </>
-        ) : isSpeaking ? (
+        {isSpeaking ? (
           <>
             <span style={{ fontSize: "1.2rem" }}>🛑</span> Parar Emissão
           </>
